@@ -23,33 +23,33 @@ interface TestCase {
 const TitleVerification = () => {
     const [title, setTitle] = useState("");
     const [testCases, setTestCases] = useState<TestCase[]>([
-        // {
-        //     id: 1,
-        //     title: "Minimum Word Check", 
-        //     status: 'idle',
-        //     endpoint: '/check_min_word'
-        //     method: 'GET'
-        // },
+        {
+            id: 1,
+            title: "Check Min Word", 
+            status: 'idle',
+            endpoint: '/check_min_word',
+            method: 'POST'
+        },
         {
             id: 2,
+            title: "Check Special Character",
+            status: 'idle',
+            endpoint: '/check_spec_char', 
+            method: 'POST'
+        },
+        {
+            id: 3,
             title: "Restricted Words Check",
             status: 'idle',
             endpoint: '/restricted_words/check',
             method: 'POST'
         },
         {
-            id: 3,
-            title: "Prefix Suffix Check",
+            id: 4,
+            title: "Prefix Suffix Check", 
             status: 'idle',
             endpoint: '/restricted_check/check',
             method: 'POST'
-        },
-        {
-            id: 4,
-            title: "Title Combination Check",
-            status: 'idle',
-            endpoint: '/title_combination/',
-            method: 'GET'
         },
         {
             id: 5,
@@ -57,8 +57,16 @@ const TitleVerification = () => {
             status: 'idle',
             endpoint: '/title_combination/space_nospace',
             method: 'GET'
+        },
+        {
+            id: 6,
+            title: "Title Combination Check",
+            status: 'idle',
+            endpoint: '/title_combination/',
+            method: 'GET'
         }
     ]);
+    
 
     const verifyTitle = async () => {
         if (!title.trim()) return;
@@ -72,7 +80,7 @@ const TitleVerification = () => {
             try {
                 let response;
                 if (test.method === 'GET') {
-                    response = await fetch(`${backendUrl}${test.endpoint}?name=${encodeURIComponent(title)}`);
+                    response = await fetch(`${backendUrl}${test.endpoint}?title=${encodeURIComponent(title)}`);
                 } else if (test.method === 'POST') {
                     response = await fetch(`${backendUrl}${test.endpoint}?title=${encodeURIComponent(title)}`, {
                         method: 'POST',
@@ -82,6 +90,7 @@ const TitleVerification = () => {
                     });
                 }
                 const data: ApiResponse = await response!.json();
+                console.log(data);
                 return {
                     id: test.id,
                     status: data.isValid ? 'success' : 'failed',
@@ -134,7 +143,7 @@ const TitleVerification = () => {
                     </div>
                 )}
                 {test.response.message && (
-                    <div className="text-gray-700">
+                    <div className={`${test.status==="success" ? " text-gray-700" : "text-red-600"} `}>
                         <span className="font-semibold">Message: </span>
                         {test.response.message}
                     </div>

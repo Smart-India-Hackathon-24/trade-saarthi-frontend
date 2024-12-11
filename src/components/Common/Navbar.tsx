@@ -32,8 +32,8 @@ export default function Navbar() {
                                     href={link.href}
                                     className={`px-3 py-2 rounded-md ${
                                         pathname === link.href
-                                            ? 'bg-primary-500 text-white'
-                                            : 'text-gray-600 hover:text-primary-500 hover:bg-gray-50'
+                                            ? 'bg-accent-500 text-white'
+                                            : 'text-gray-600 hover:text-accent-500 hover:bg-primary-100'
                                     } transition-colors duration-200`}
                                 >
                                     {link.label}

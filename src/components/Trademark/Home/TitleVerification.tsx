@@ -1,179 +1,207 @@
 "use client";
-import Loader from "@/components/Common/Loader";
-import axios from "axios";
-import React, { useState } from 'react'
+import React, { useState } from 'react';
+import { getBackendUrl } from '@/utils/getBackendUrl';
 
-type TestCaseResult = {
+interface ApiResponse {
+    status: string;
+    input_title: string;
+    isValid: boolean;
+    invalid_words?: string[];
+    message?: string;
+    error?: string;
+}
+
+interface TestCase {
     id: number;
-    name: string;
-    status: "Loading" | "Passed" | "Failed";
-};
+    title: string;
+    status: 'idle' | 'running' | 'success' | 'failed';
+    endpoint: string;
+    method: string;
+    response?: ApiResponse;
+}
 
 const TitleVerification = () => {
     const [title, setTitle] = useState("");
-    const [englishText, setEnglishText] = useState('');
-    const [translatedText, setTranslatedText] = useState('');
-    const [isVerified, setIsVerified] = useState(false);
-    const [results, setResults] = useState<{ testCase: string; result: string,message:string }[]>([]);
-    const [testCases, setTestCases] = useState<TestCaseResult[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
-
-    const apiEndpoints = [
-        `${process.env.NEXT_PUBLIC_API_URL}/trademark/getdataontitle`,
-        `${process.env.NEXT_PUBLIC_API_URL}/trademark/getdataontitle`,
-
-    ];
-
-    // Simulate translation (Replace with actual API)
-    const translateText = async (text: string) => {
-        try {
-            const translation = `Translated: ${text} (in Hindi)`; 
-            setTranslatedText(translation);
-        } catch (error) {
-            console.error('Translation failed:', error);
-            setTranslatedText('Translation error occurred.');
+    const [testCases, setTestCases] = useState<TestCase[]>([
+        // {
+        //     id: 1,
+        //     title: "Minimum Word Check", 
+        //     status: 'idle',
+        //     endpoint: '/check_min_word'
+        //     method: 'GET'
+        // },
+        {
+            id: 2,
+            title: "Restricted Words Check",
+            status: 'idle',
+            endpoint: '/restricted_words/check',
+            method: 'POST'
+        },
+        {
+            id: 3,
+            title: "Prefix Suffix Check",
+            status: 'idle',
+            endpoint: '/restricted_check/check',
+            method: 'POST'
+        },
+        {
+            id: 4,
+            title: "Title Combination Check",
+            status: 'idle',
+            endpoint: '/title_combination/',
+            method: 'GET'
+        },
+        {
+            id: 5,
+            title: "Space No-Space Check",
+            status: 'idle',
+            endpoint: '/title_combination/space_nospace',
+            method: 'GET'
         }
-    };
+    ]);
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        const text = e.target.value;
-        setEnglishText(text);
-        translateText(text); 
-        setIsVerified(false); 
-    };
+    const verifyTitle = async () => {
+        if (!title.trim()) return;
 
-    const handleVerification = () => {
-        if (englishText && translatedText) {
-            setIsVerified(true);
-        } else {
-            alert('Please enter and translate the title first.');
-        }
-    };
+        // Set all test cases to running
+        setTestCases(prev => prev.map(test => ({ ...test, status: 'running' })));
 
-    const fetchData = async (url: string, title: string, options?: { signal?: AbortSignal }) => {
-        try {
-            const response = await axios.get(`${url}?name=${title}`);
-            return response?.data;
-        } catch (error) {
-            if (axios.isCancel(error)) {
-                console.log('Request canceled:', error.message);
+        const backendUrl = getBackendUrl();
+
+        const apiCalls = testCases.map(async (test) => {
+            try {
+                let response;
+                if (test.method === 'GET') {
+                    response = await fetch(`${backendUrl}${test.endpoint}?name=${encodeURIComponent(title)}`);
+                } else if (test.method === 'POST') {
+                    response = await fetch(`${backendUrl}${test.endpoint}?title=${encodeURIComponent(title)}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                    });
+                }
+                const data: ApiResponse = await response!.json();
+                return {
+                    id: test.id,
+                    status: data.isValid ? 'success' : 'failed',
+                    response: data
+                };
+            } catch (_error) {
+                return {
+                    id: test.id,
+                    status: 'failed',
+                    response: {
+                        status: 'error',
+                        input_title: title,
+                        isValid: false,
+                        message: (_error as Error).message
+                    }
+                };
             }
-            return { status: "Failed" };
+        });
+
+        const results = await Promise.all(apiCalls);
+
+        setTestCases(prev => prev.map(test => {
+            const result = results.find(r => r.id === test.id);
+            return {
+                ...test,
+                status: result?.status as TestCase['status'],
+                response: result?.response
+            };
+        }));
+    };
+
+    const getStatusColor = (status: TestCase['status']) => {
+        switch (status) {
+            case 'running': return 'bg-yellow-100 text-yellow-800';
+            case 'success': return 'bg-green-100 text-green-800';
+            case 'failed': return 'bg-red-100 text-red-800';
+            default: return 'bg-gray-100 text-gray-800';
         }
     };
 
-    const executeApiCalls = async (apiEndpoints: string[], title: string, updatedTestCases: TestCaseResult[]) => {
-        const abortControllers: AbortController[] = [];
+    const renderResponseDetails = (test: TestCase) => {
+        if (!test.response) return null;
 
-        try {
-            await Promise.all(
-                apiEndpoints.map((endpoint, index) => {
-                    const abortController = new AbortController();
-                    abortControllers.push(abortController);
-
-                    return (async () => {
-                        const apiResult = await fetchData(endpoint, title, {
-                            signal: abortController.signal
-                        });
-                        console.log("DDD",apiResult)
-                        const status = apiResult?.result === true ? "Passed" : "Failed";
-                        updatedTestCases[index].status = status;
-                        
-                        setResults(prev => [
-                            ...prev,
-                            { testCase: `Test Case ${index + 1}`, result: status, message: apiResult?.message }
-                        ]);
-                        setTestCases([...updatedTestCases]);
-
-                        if (status === "Failed") {
-                            abortControllers.forEach(controller => controller.abort());
-                            throw new Error(`Test Case ${index + 1} failed`);
-                        }
-                    })();
-                })
-            );
-        } catch (error) {
-            console.error("Error during API execution:", error);
-            setError("Verification failed. Please try again.");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        setError("");
-        setResults([]);
-
-        const initialTestCases: TestCaseResult[] = [
-            { id: 0, name: "Test Case 1", status: "Loading" },
-            { id: 1, name: "Test Case 2", status: "Loading" },
-            { id: 2, name: "Test Case 3", status: "Loading" },
-            { id: 3, name: "Test Case 4", status: "Loading" },
-        ];
-
-        setTestCases(initialTestCases);
-        const updatedTestCases = [...initialTestCases];
-        
-        await executeApiCalls(apiEndpoints, title, updatedTestCases);
+        return (
+            <div className="mt-3 text-sm space-y-2">
+                {test.response.invalid_words && test.response.invalid_words.length > 0 && (
+                    <div className="text-red-600">
+                        <span className="font-semibold">Invalid Words: </span>
+                        {test.response.invalid_words.join(', ')}
+                    </div>
+                )}
+                {test.response.message && (
+                    <div className="text-gray-700">
+                        <span className="font-semibold">Message: </span>
+                        {test.response.message}
+                    </div>
+                )}
+                {test.response.error && (
+                    <div className="text-red-600">
+                        <span className="font-semibold">Error: </span>
+                        {test.response.error}
+                    </div>
+                )}
+            </div>
+        );
     };
 
     return (
-        <>
-            <h1 className="text-3xl font-bold text-center my-5">TradeMark Sarthi</h1>
-            <div className="max-w-lg mx-auto mt-10 p-5 border rounded-lg">
-                <h1 className="text-2xl font-bold mb-4">Title Verification</h1>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <input
-                        type="text"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        placeholder="Enter title"
-                        className="w-full p-3 border rounded-md focus:outline-none focus:ring focus:ring-blue-300 text-black"
-                        required
-                    />
-                    <button
-                        type="submit"
-                        className="w-full p-3 bg-blue-800 text-white rounded-md hover:bg-blue-700"
-                        disabled={loading}
-                    >
-                        {loading ? "Verifying..." : "Verify Title"}
-                    </button>
-                </form>
-                {error && <p className="text-red-600 mt-4">{error}</p>}
-                <div className="mt-6 space-y-4">
-                    <div className="mt-6 space-y-4">
-                        {results.map((testCase, index) => (
-                            <div
-                                key={index}
-                                className="flex justify-between items-center p-4 border rounded-md shadow-md"
+        <div className="w-full h-[90vh] p-8">
+            <div className="flex h-full flex-col md:flex-row gap-8">
+                {/* Left Section - Input */}
+                <div className="md:w-1/2 h-full flex flex-col justify-around items-center">
+                    <div className="bg-white p-6 w-[80%] rounded-lg shadow-lg border border-primary-100">
+                        <h2 className="text-2xl font-bold mb-6 text-primary-700">Title Verification</h2>
+                        <div className="space-y-4">
+                            <input
+                                type="text"
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                                placeholder="Enter title to verify"
+                                className="w-full p-3 border border-primary-200 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-400 text-gray-600"
+                            />
+                            <button
+                                onClick={verifyTitle}
+                                className="w-full p-3 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors duration-200"
                             >
-                                <div className="flex flex-col gap-2">
-                                    <span className="font-semibold">{testCase.testCase}</span>
-                                    <small>{testCase?.message}</small>
+                                Verify Title
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Section - Test Cases */}
+                <div className="md:w-1/2 h-full flex flex-col justify-center items-center">
+                    <div className="space-y-4 w-full">
+                        {testCases.map((test) => (
+                            <div key={test.id} className="border border-primary-100 rounded-lg p-4">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-primary-800 font-semibold">{test.title}</span>
+                                    {test.status === 'running' ? (
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-4 h-4 border-2 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+                                            <span className="uppercase font-semibold text-sm text-primary-600">
+                                                Running
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <span className={`px-3 py-1 rounded-full text-sm uppercase font-semibold ${getStatusColor(test.status)}`}>
+                                            {test.status}
+                                        </span>
+                                    )}
                                 </div>
-                                {testCase.result === "Loading" ? (
-                                    <div><Loader/></div>
-                                ) : (
-                                    <span
-                                        className={`font-bold ${
-                                            testCase.result === "Passed"
-                                                ? "text-green-600"
-                                                : "text-red-600"
-                                        }`}
-                                    >
-                                        {testCase.result}
-                                    </span>
-                                )}
+                                {test.status !== 'idle' && test.status !== 'running' && renderResponseDetails(test)}
                             </div>
                         ))}
                     </div>
                 </div>
             </div>
-        </>
-    )
-}
+        </div>
+    );
+};
 
-export default TitleVerification
+export default TitleVerification;

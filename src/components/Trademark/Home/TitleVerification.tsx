@@ -22,6 +22,7 @@ interface TestCase {
 
 const TitleVerification = () => {
     const [title, setTitle] = useState("");
+    const [report,setReport]= useState("");
     const [testCases, setTestCases] = useState<TestCase[]>([
         {
             id: 1,
@@ -64,17 +65,18 @@ const TitleVerification = () => {
             status: 'idle',
             endpoint: '/title_combination/',
             method: 'GET'
-        }
+        },
+
     ]);
-    
+    const backendUrl = getBackendUrl();
 
     const verifyTitle = async () => {
         if (!title.trim()) return;
-
+        setReport("");
         // Set all test cases to running
         setTestCases(prev => prev.map(test => ({ ...test, status: 'running' })));
 
-        const backendUrl = getBackendUrl();
+        
 
         const apiCalls = testCases.map(async (test) => {
             try {
@@ -111,7 +113,7 @@ const TitleVerification = () => {
         });
 
         const results = await Promise.all(apiCalls);
-
+        getReportDetails(title);
         setTestCases(prev => prev.map(test => {
             const result = results.find(r => r.id === test.id);
             return {
@@ -157,10 +159,22 @@ const TitleVerification = () => {
             </div>
         );
     };
+    
+    const getReportDetails=async (title:string)=>{
+        let response = await fetch(`${backendUrl}/get_report?title=${encodeURIComponent(title)}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        });
+        const data = await response!.json();
+        console.log(data,"__REPORT__",data[0]?.final_output);
+        setReport(data[0]?.final_output);
+    }
 
     return (
         <div className="w-full h-[90vh] p-8">
-            <div className="flex h-full flex-col md:flex-row gap-8">
+            <div className="flex h-full flex-col md:flex-row gap-8 my-4">
                 {/* Left Section - Input */}
                 <div className="md:w-1/2 h-full flex flex-col justify-around items-center">
                     <div className="bg-white p-6 w-[80%] rounded-lg shadow-lg border border-primary-100">
@@ -209,6 +223,18 @@ const TitleVerification = () => {
                     </div>
                 </div>
             </div>
+            {report && <>
+                <h1 className='text-7xl text-center text-primary-600  my-8 font-bold uppercase'>
+                    Report:
+                </h1>
+            <div className=' border-2 border-gray-700 text-lg rounded-lg px-6 my-2 py-2 text-center w-10/12 mx-auto'>
+                <p className=''>
+                    {report}
+                </p>
+
+            </div>
+            </>
+            }
         </div>
     );
 };

@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 export default function HeroSection() {
     return (
-        <div className="bg-gradient-to-br h-[92vh] from-primary-800 via-primary-700 to-primary-600 text-white flex items-center justify-center">
+        <div className="bg-gradient-to-br h-[92vh] from-primary-400 via-primary-500 to-primary-800 text-white flex items-center justify-center">
             <div className="px-6 py-24">
                 <div className="flex flex-col items-center justify-center text-center">
                     <div className="max-w-3xl">

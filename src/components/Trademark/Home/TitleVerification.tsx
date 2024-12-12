@@ -37,9 +37,9 @@ const TitleVerification = () => {
     const [similarTitlesAcceptanceProbability, setSimilarTitlesAcceptanceProbability] = useState<number | null>(null);
     const [soundSimilarTitlesRejectanceProbability, setSoundSimilarTitlesRejectanceProbability] = useState<number | null>(null);
     const [soundSimilarTitlesAcceptanceProbability, setSoundSimilarTitlesAcceptanceProbability] = useState<number | null>(null);
-    const [sameTitles, setSameTitles] = useState<Record<string, string>>({});
-    const [similarTitles, setSimilarTitles] = useState<Record<string, string>>({});
-    const [soundSimilarTitles, setSoundSimilarTitles] = useState<Record<string, string>>({});
+    const [sameTitles, setSameTitles] = useState<Record<string, number>>({});
+    const [similarTitles, setSimilarTitles] = useState<Record<string, number>>({});
+    const [soundSimilarTitles, setSoundSimilarTitles] = useState<Record<string, number>>({});
 
     const accordionSections: AccordionSection[] = [
         {
@@ -171,13 +171,28 @@ const TitleVerification = () => {
                         setSoundSimilarTitlesAcceptanceProbability(data["acceptance probability"])
                     }
                     if (data["FDL"] && test.id == 7) {
-                        setSameTitles(data["FDL"]["Title_Name"])
+                        const titleFrequency: Record<string, number> = {};
+                        Object.values(data["FDL"]["Title_Name"]).forEach((value: unknown) => {
+                            const title = value as string;
+                            titleFrequency[title] = (titleFrequency[title] || 0) + 1;
+                        });
+                        setSameTitles(titleFrequency);
                     }
                     if (data["FDL"] && test.id == 8) {
-                        setSimilarTitles(data["FDL"]["Title_Name"])
+                        const titleFrequency: Record<string, number> = {};
+                        Object.values(data["FDL"]["Title_Name"]).forEach((value: unknown) => {
+                            const title = value as string;
+                            titleFrequency[title] = (titleFrequency[title] || 0) + 1;
+                        });
+                        setSimilarTitles(titleFrequency);
                     }
                     if (data["FLD"] && test.id == 9) {
-                        setSoundSimilarTitles(data["FLD"]["Title_Name"])
+                        const titleFrequency: Record<string, number> = {};
+                        Object.values(data["FLD"]["Title_Name"]).forEach((value: unknown) => {
+                            const title = value as string;
+                            titleFrequency[title] = (titleFrequency[title] || 0) + 1;
+                        });
+                        setSoundSimilarTitles(titleFrequency);
                     }
                     return {
                         id: test.id,
@@ -306,7 +321,7 @@ const TitleVerification = () => {
                     </span>
                 );
             }
-            
+
             if (sameTitlesRejectanceProbability !== null && sameTitlesAcceptanceProbability !== null) {
                 const result = sameTitlesRejectanceProbability > sameTitlesAcceptanceProbability ? "Failed" : "Passed";
                 return (
@@ -432,15 +447,15 @@ const TitleVerification = () => {
                         <table className="w-full">
                             <thead>
                                 <tr>
-                                    <th className="border-b-2 p-2 text-left">ID</th>
                                     <th className="border-b-2 p-2 text-left">Title</th>
+                                    <th className="border-b-2 p-2 text-left">Frequency</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {Object.entries(sameTitles).map(([id, title]) => (
-                                    <tr key={id}>
-                                        <td className="border-b p-2">{id}</td>
+                                {Object.entries(sameTitles).filter(([_, freq]) => freq > 0).map(([title, freq]) => (
+                                    <tr key={title}>
                                         <td className="border-b p-2">{title}</td>
+                                        <td className="border-b p-2">{freq}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -455,15 +470,15 @@ const TitleVerification = () => {
                         <table className="w-full">
                             <thead>
                                 <tr>
-                                    <th className="border-b-2 p-2 text-left">ID</th>
                                     <th className="border-b-2 p-2 text-left">Title</th>
+                                    <th className="border-b-2 p-2 text-left">Frequency</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {Object.entries(similarTitles).map(([id, title]) => (
-                                    <tr key={id}>
-                                        <td className="border-b p-2">{id}</td>
+                                {Object.entries(similarTitles).filter(([_, freq]) => freq > 0).map(([title, freq]) => (
+                                    <tr key={title}>
                                         <td className="border-b p-2">{title}</td>
+                                        <td className="border-b p-2">{freq}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -478,15 +493,15 @@ const TitleVerification = () => {
                         <table className="w-full">
                             <thead>
                                 <tr>
-                                    <th className="border-b-2 p-2 text-left">ID</th>
                                     <th className="border-b-2 p-2 text-left">Title</th>
+                                    <th className="border-b-2 p-2 text-left">Frequency</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {Object.entries(soundSimilarTitles).map(([id, title]) => (
-                                    <tr key={id}>
-                                        <td className="border-b p-2">{id}</td>
+                                {Object.entries(soundSimilarTitles).filter(([_, freq]) => freq > 0).map(([title, freq]) => (
+                                    <tr key={title}>
                                         <td className="border-b p-2">{title}</td>
+                                        <td className="border-b p-2">{freq}</td>
                                     </tr>
                                 ))}
                             </tbody>

@@ -39,6 +39,7 @@ const TitleVerification = () => {
     const [soundSimilarTitlesAcceptanceProbability, setSoundSimilarTitlesAcceptanceProbability] = useState(0);
     const [sameTitles, setSameTitles] = useState<Record<string, string>>({});
     const [similarTitles, setSimilarTitles] = useState<Record<string, string>>({});
+    const [soundSimilarTitles, setSoundSimilarTitles] = useState<Record<string, string>>({});
 
     const accordionSections: AccordionSection[] = [
         {
@@ -175,6 +176,9 @@ const TitleVerification = () => {
                     if (data["FDL"] && test.id == 8) {
                         setSimilarTitles(data["FDL"]["Title_Name"])
                     }
+                    if (data["FLD"] && test.id == 9) {
+                        setSoundSimilarTitles(data["FLD"]["Title_Name"])
+                    }
                     return {
                         id: test.id,
                         status: data.isValid ? test.id == 7 ? 'failed' : 'success' : 'failed',
@@ -281,6 +285,7 @@ const TitleVerification = () => {
     };
 
     const getStatusText = (test: TestCase) => {
+        console.log("test: ", test);
         if (test.status === 'running') {
             return (
                 <div className="flex items-center gap-2">
@@ -298,7 +303,7 @@ const TitleVerification = () => {
             const textColor = test.status === 'success' ? 'text-green-800' : 'text-red-800';
             return (
                 <span className={`px-3 py-1 rounded-full text-sm font-bold border ${getStatusColor(test.status)} ${textColor} `}>
-                    {`${rejectPercentage}%`}
+                    {`${rejectPercentage}% `} Similarity
                 </span>
             );
         }
@@ -332,20 +337,6 @@ const TitleVerification = () => {
                             >
                                 Verify Title
                             </button>
-                        </div>
-                    </div>
-                    <div className="flex flex-col items-center justify-center">
-                        <div className="text-lg font-semibold text-primary-600">
-                            Same Title Rejectance Probability: {(sameTitlesRejectanceProbability || 0).toFixed(2)}%
-                        </div>
-                        <div className="text-lg font-semibold text-primary-600">
-                            Same Title Acceptance Probability: {(sameTitlesAcceptanceProbability || 0).toFixed(2)}%
-                        </div>
-                        <div className="text-lg font-semibold text-primary-600">
-                            Similarity Acceptance Probability: {(similarTitlesAcceptanceProbability || 0).toFixed(2)}%
-                        </div>
-                        <div className="text-lg font-semibold text-primary-600">
-                            Similarity Rejectance Probability: {(similarTitlesRejectanceProbability || 0).toFixed(2)}%
                         </div>
                     </div>
                 </div>
@@ -404,7 +395,7 @@ const TitleVerification = () => {
             </div>
 
             <div className="flex flex-col md:flex-row gap-8 p-4">
-                {/* FLD Table */}
+                {/* Same Titles */}
                 <div className="flex-1">
                     <h2 className="text-2xl font-bold mb-4 text-primary-700">Same Titles</h2>
                     <div className="bg-white rounded-lg shadow-md p-4 max-h-[40vh] h-[40vh] overflow-y-auto">
@@ -427,7 +418,7 @@ const TitleVerification = () => {
                     </div>
                 </div>
 
-                {/* DFL Table */}
+                {/* Similar Titles */}
                 <div className="flex-1">
                     <h2 className="text-2xl font-bold mb-4 text-primary-700">Similar Titles</h2>
                     <div className="bg-white rounded-lg shadow-md p-4 max-h-[40vh] h-[40vh] overflow-y-auto">
@@ -440,6 +431,29 @@ const TitleVerification = () => {
                             </thead>
                             <tbody>
                                 {Object.entries(similarTitles).map(([id, title]) => (
+                                    <tr key={id}>
+                                        <td className="border-b p-2">{id}</td>
+                                        <td className="border-b p-2">{title}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {/* Sound Similar Titles */}
+                <div className="flex-1">
+                    <h2 className="text-2xl font-bold mb-4 text-primary-700">Sound Similar Titles</h2>
+                    <div className="bg-white rounded-lg shadow-md p-4 max-h-[40vh] h-[40vh] overflow-y-auto">
+                        <table className="w-full">
+                            <thead>
+                                <tr>
+                                    <th className="border-b-2 p-2 text-left">ID</th>
+                                    <th className="border-b-2 p-2 text-left">Title</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {Object.entries(soundSimilarTitles).map(([id, title]) => (
                                     <tr key={id}>
                                         <td className="border-b p-2">{id}</td>
                                         <td className="border-b p-2">{title}</td>

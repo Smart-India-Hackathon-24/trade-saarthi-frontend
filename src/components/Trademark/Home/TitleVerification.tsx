@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { getBackendUrl } from '@/utils/getBackendUrl';
 import { motion, AnimatePresence } from 'framer-motion';
+import { text } from 'stream/consumers';
 
 interface ApiResponse {
     status: string;
@@ -181,7 +182,7 @@ const TitleVerification = () => {
                     }
                     return {
                         id: test.id,
-                        status: data.isValid ? test.id == 7 ? 'failed' : 'success' : 'failed',
+                        status: data.isValid ? 'success' : 'failed',
                         response: data
                     };
 
@@ -286,6 +287,7 @@ const TitleVerification = () => {
 
     const getStatusText = (test: TestCase) => {
         console.log("test: ", test);
+
         if (test.status === 'running') {
             return (
                 <div className="flex items-center gap-2">
@@ -297,13 +299,22 @@ const TitleVerification = () => {
             );
         }
 
+        if (test.id === 7) {
+            const d = sameTitlesRejectanceProbability > sameTitlesAcceptanceProbability ? "Failed" : "Passed"
+            return (
+                <span className={`px-3 py-1 rounded-full text-sm font-bold border ${d === "Failed" ? "text-red-800 border-red-800 bg-red-100" : "text-green-800 border-green-800 bg-green-100"}`}>
+                    {d}
+                </span>
+            );
+        }
+
         // For Similar and Sound Similar Title Check
         if (test.id === 8 || test.id === 9) {
             const rejectPercentage = test.id === 8 ? similarTitlesRejectanceProbability : soundSimilarTitlesRejectanceProbability;
             const textColor = test.status === 'success' ? 'text-green-800' : 'text-red-800';
             return (
                 <span className={`px-3 py-1 rounded-full text-sm font-bold border ${getStatusColor(test.status)} ${textColor} `}>
-                    {`${rejectPercentage}% `} Similarity
+                    {`${rejectPercentage.toFixed(2)}% `} Similarity
                 </span>
             );
         }
@@ -311,7 +322,7 @@ const TitleVerification = () => {
         // For all other tests
         return (
             <span className={`px-3 py-1 rounded-full text-sm font-bold border ${getStatusColor(test.status)}`}>
-                {test.status === 'success' ? 'PASSED' : 'FAILED'}
+                {test.status === 'success' ? "Passed" : "Failed"}
             </span>
         );
     };

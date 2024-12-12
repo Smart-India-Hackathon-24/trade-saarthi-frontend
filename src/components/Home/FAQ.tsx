@@ -1,6 +1,7 @@
 "use client"
 import React, { useState } from 'react';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function FAQ() {
     const [openIndex, setOpenIndex] = useState<number | null>(null);
@@ -31,20 +32,32 @@ export default function FAQ() {
     return (
         <section className="py-20 bg-white">
             <div className="container mx-auto px-6">
-                <div className="text-center mb-16">
+                <motion.div 
+                    className="text-center mb-16"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.8 }}
+                >
                     <h2 className="text-4xl font-bold text-gray-900 mb-4">
                         Frequently Asked Questions
                     </h2>
                     <p className="text-lg text-gray-600 max-w-2xl mx-auto">
                         Got questions? We&apos;ve got answers! Here are some of the most common questions we receive.
                     </p>
-                </div>
+                </motion.div>
 
                 <div className="max-w-3xl mx-auto">
                     {faqItems.map((item, index) => (
-                        <div 
+                        <motion.div 
                             key={index} 
                             className="mb-4 border-b border-gray-200 last:border-b-0"
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5, delay: index * 0.1 }}
                         >
                             <button
                                 className="w-full flex justify-between items-center py-4 text-left"
@@ -58,12 +71,24 @@ export default function FAQ() {
                                     <FaChevronDown className="text-gray-500" />
                                 }
                             </button>
-                            {openIndex === index && (
-                                <div className="pb-4 text-gray-600">
-                                    {item.answer}
-                                </div>
-                            )}
-                        </div>
+                            <AnimatePresence mode="wait">
+                                {openIndex === index && (
+                                    <motion.div 
+                                        initial={{ height: 0, opacity: 0, y: -10 }}
+                                        animate={{ height: "auto", opacity: 1, y: 0 }}
+                                        exit={{ height: 0, opacity: 0, y: -10 }}
+                                        transition={{ 
+                                            duration: 0.3,
+                                            opacity: { duration: 0.2 },
+                                            height: { duration: 0.3 }
+                                        }}
+                                        className="pb-4 text-gray-600"
+                                    >
+                                        {item.answer}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </motion.div>
                     ))}
                 </div>
             </div>

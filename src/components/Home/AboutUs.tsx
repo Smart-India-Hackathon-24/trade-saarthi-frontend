@@ -1,10 +1,18 @@
+"use client"
 import Image from 'next/image'
 import React from 'react'
+import { motion } from 'framer-motion'
 
 export default function AboutUs() {
     return (
         <div className='w-full flex justify-between items-center p-12 bg-white'>
-            <div className='lg:w-1/2 mb-10 lg:mb-0 lg:pr-10'>
+            <motion.div 
+                className='lg:w-1/2 mb-10 lg:mb-0 lg:pr-10'
+                initial={{ opacity: 0, x: -50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8 }}
+            >
                 <h2 className="text-4xl font-bold text-gray-900 mb-6">
                     Advanced Title Verification
                 </h2>
@@ -17,8 +25,14 @@ export default function AboutUs() {
                     With Redis caching and intelligent probability scoring, you get instant
                     results while maintaining high accuracy in detecting similar or duplicate titles.
                 </p>
-            </div>
-            <div className='lg:w-1/2'>
+            </motion.div>
+            <motion.div 
+                className='lg:w-1/2'
+                initial={{ opacity: 0, x: 50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8 }}
+            >
                 <Image
                     src="/Home/AboutUs.png"
                     alt="Title Verification System"
@@ -26,7 +40,7 @@ export default function AboutUs() {
                     height={500}
                     className="rounded-lg shadow-lg w-full"
                 />
-            </div>
+            </motion.div>
         </div>
     )
 }

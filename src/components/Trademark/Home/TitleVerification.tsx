@@ -299,14 +299,8 @@ const TitleVerification = () => {
         }
 
         if (test.id === 7) {
-            if (sameTitlesRejectanceProbability === null || sameTitlesAcceptanceProbability === null) {
-                return (
-                    <span className="px-3 py-1 rounded-full text-sm font-bold border text-gray-800 border-gray-800 bg-gray-100">
-                        Pending
-                    </span>
-                );
-            }
-            const d = sameTitlesRejectanceProbability > sameTitlesAcceptanceProbability ? "Failed" : "Passed"
+            // 
+            const d = sameTitlesRejectanceProbability && sameTitlesAcceptanceProbability ? (sameTitlesRejectanceProbability > sameTitlesAcceptanceProbability ? "Failed" : "Passed") : "Pending"
             return (
                 <span className={`px-3 py-1 rounded-full text-sm font-bold border ${d === "Failed" ? "text-red-800 border-red-800 bg-red-100" : "text-green-800 border-green-800 bg-green-100"}`}>
                     {d}

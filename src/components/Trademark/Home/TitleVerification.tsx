@@ -31,15 +31,15 @@ const TitleVerification = () => {
     const [title, setTitle] = useState("");
     const [report, setReport] = useState("");
     const [openSections, setOpenSections] = useState<number[]>([]);
-    const [sameTitlesRejectanceProbability, setSameTitlesRejectanceProbability] = useState(0);
-    const [sameTitlesAcceptanceProbability, setSameTitlesAcceptanceProbability] = useState(0);
-    const [similarTitlesRejectanceProbability, setSimilarTitlesRejectanceProbability] = useState(0);
-    const [similarTitlesAcceptanceProbability, setSimilarTitlesAcceptanceProbability] = useState(0);
-    const [soundSimilarTitlesRejectanceProbability, setSoundSimilarTitlesRejectanceProbability] = useState(0);
-    const [soundSimilarTitlesAcceptanceProbability, setSoundSimilarTitlesAcceptanceProbability] = useState(0);
-    const [sameTitles, setSameTitles] = useState<Record<string, string>>({});
-    const [similarTitles, setSimilarTitles] = useState<Record<string, string>>({});
-    const [soundSimilarTitles, setSoundSimilarTitles] = useState<Record<string, string>>({});
+    const [sameTitlesRejectanceProbability, setSameTitlesRejectanceProbability] = useState<number | null>(null);
+    const [sameTitlesAcceptanceProbability, setSameTitlesAcceptanceProbability] = useState<number | null>(null);
+    const [similarTitlesRejectanceProbability, setSimilarTitlesRejectanceProbability] = useState<number | null>(null);
+    const [similarTitlesAcceptanceProbability, setSimilarTitlesAcceptanceProbability] = useState<number | null>(null);
+    const [soundSimilarTitlesRejectanceProbability, setSoundSimilarTitlesRejectanceProbability] = useState<number | null>(null);
+    const [soundSimilarTitlesAcceptanceProbability, setSoundSimilarTitlesAcceptanceProbability] = useState<number | null>(null);
+    const [sameTitles, setSameTitles] = useState<Record<string, number>>({});
+    const [similarTitles, setSimilarTitles] = useState<Record<string, number>>({});
+    const [soundSimilarTitles, setSoundSimilarTitles] = useState<Record<string, number>>({});
 
     const accordionSections: AccordionSection[] = [
         {
@@ -134,12 +134,13 @@ const TitleVerification = () => {
         for (const section of sections) {
             const apiCalls = section.testCases.map(async (test) => {
                 try {
-                    setSameTitlesRejectanceProbability(0);
-                    setSameTitlesAcceptanceProbability(0);
-                    setSimilarTitlesRejectanceProbability(0);
-                    setSimilarTitlesAcceptanceProbability(0);
+                    setSameTitlesRejectanceProbability(null);
+                    setSameTitlesAcceptanceProbability(null);
+                    setSimilarTitlesRejectanceProbability(null);
+                    setSimilarTitlesAcceptanceProbability(null);
                     setSameTitles({});
                     setSimilarTitles({});
+                    setSoundSimilarTitles({});
                     let response;
                     if (test.method === 'GET') {
                         response = await fetch(`${backendUrl}${test.endpoint}?title=${encodeURIComponent(title)}`);
@@ -171,17 +172,32 @@ const TitleVerification = () => {
                         setSoundSimilarTitlesAcceptanceProbability(data["acceptance probability"])
                     }
                     if (data["FDL"] && test.id == 7) {
-                        setSameTitles(data["FDL"]["Title_Name"])
+                        const titleFrequency: Record<string, number> = {};
+                        Object.values(data["FDL"]["Title_Name"]).forEach((value: unknown) => {
+                            const title = value as string;
+                            titleFrequency[title] = (titleFrequency[title] || 0) + 1;
+                        });
+                        setSameTitles(titleFrequency);
                     }
                     if (data["FDL"] && test.id == 8) {
-                        setSimilarTitles(data["FDL"]["Title_Name"])
+                        const titleFrequency: Record<string, number> = {};
+                        Object.values(data["FDL"]["Title_Name"]).forEach((value: unknown) => {
+                            const title = value as string;
+                            titleFrequency[title] = (titleFrequency[title] || 0) + 1;
+                        });
+                        setSimilarTitles(titleFrequency);
                     }
                     if (data["FLD"] && test.id == 9) {
-                        setSoundSimilarTitles(data["FLD"]["Title_Name"])
+                        const titleFrequency: Record<string, number> = {};
+                        Object.values(data["FLD"]["Title_Name"]).forEach((value: unknown) => {
+                            const title = value as string;
+                            titleFrequency[title] = (titleFrequency[title] || 0) + 1;
+                        });
+                        setSoundSimilarTitles(titleFrequency);
                     }
                     return {
                         id: test.id,
-                        status: data.isValid ? test.id == 7 ? 'failed' : 'success' : 'failed',
+                        status: data.isValid ? 'success' : 'failed',
                         response: data
                     };
 
@@ -286,6 +302,7 @@ const TitleVerification = () => {
 
     const getStatusText = (test: TestCase) => {
         console.log("test: ", test);
+
         if (test.status === 'running') {
             return (
                 <div className="flex items-center gap-2">
@@ -297,21 +314,50 @@ const TitleVerification = () => {
             );
         }
 
+        if (test.id === 7) {
+            if (test.status === 'idle') {
+                return (
+                    <span className="px-3 py-1 rounded-full text-sm font-bold border text-gray-800 border-gray-800 bg-gray-100">
+                        Pending
+                    </span>
+                );
+            }
+
+            if (sameTitlesRejectanceProbability !== null && sameTitlesAcceptanceProbability !== null) {
+                const result = sameTitlesRejectanceProbability > sameTitlesAcceptanceProbability ? "Failed" : "Passed";
+                return (
+                    <span className={`px-3 py-1 rounded-full text-sm font-bold border ${result === "Failed" ? "text-red-800 border-red-800 bg-red-100" : "text-green-800 border-green-800 bg-green-100"}`}>
+                        {result}
+                    </span>
+                );
+            }
+        }
+
         // For Similar and Sound Similar Title Check
         if (test.id === 8 || test.id === 9) {
+            if (test.status === 'idle') {
+                return (
+                    <span className="px-3 py-1 rounded-full text-sm font-bold border text-gray-800 border-gray-800 bg-gray-100">
+                        Pending
+                    </span>
+                );
+            }
+
             const rejectPercentage = test.id === 8 ? similarTitlesRejectanceProbability : soundSimilarTitlesRejectanceProbability;
-            const textColor = test.status === 'success' ? 'text-green-800' : 'text-red-800';
-            return (
-                <span className={`px-3 py-1 rounded-full text-sm font-bold border ${getStatusColor(test.status)} ${textColor} `}>
-                    {`${rejectPercentage}% `} Similarity
-                </span>
-            );
+            if (rejectPercentage !== null) {
+                const textColor = test.status === 'success' ? 'text-green-800' : 'text-red-800';
+                return (
+                    <span className={`px-3 py-1 rounded-full text-sm font-bold border ${getStatusColor(test.status)} ${textColor}`}>
+                        {`${rejectPercentage.toFixed(2)}% `} Similarity
+                    </span>
+                );
+            }
         }
 
         // For all other tests
         return (
             <span className={`px-3 py-1 rounded-full text-sm font-bold border ${getStatusColor(test.status)}`}>
-                {test.status === 'success' ? 'PASSED' : 'FAILED'}
+                {test.status === 'success' ? "Passed" : "Failed"}
             </span>
         );
     };
@@ -402,15 +448,15 @@ const TitleVerification = () => {
                         <table className="w-full">
                             <thead>
                                 <tr>
-                                    <th className="border-b-2 p-2 text-left">ID</th>
                                     <th className="border-b-2 p-2 text-left">Title</th>
+                                    <th className="border-b-2 p-2 text-left">Frequency</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {Object.entries(sameTitles).map(([id, title]) => (
-                                    <tr key={id}>
-                                        <td className="border-b p-2">{id}</td>
+                                {Object.entries(sameTitles).filter(([_, freq]) => freq > 0).map(([title, freq]) => (
+                                    <tr key={title}>
                                         <td className="border-b p-2">{title}</td>
+                                        <td className="border-b p-2">{freq}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -425,15 +471,15 @@ const TitleVerification = () => {
                         <table className="w-full">
                             <thead>
                                 <tr>
-                                    <th className="border-b-2 p-2 text-left">ID</th>
                                     <th className="border-b-2 p-2 text-left">Title</th>
+                                    <th className="border-b-2 p-2 text-left">Frequency</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {Object.entries(similarTitles).map(([id, title]) => (
-                                    <tr key={id}>
-                                        <td className="border-b p-2">{id}</td>
+                                {Object.entries(similarTitles).filter(([_, freq]) => freq > 0).map(([title, freq]) => (
+                                    <tr key={title}>
                                         <td className="border-b p-2">{title}</td>
+                                        <td className="border-b p-2">{freq}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -448,15 +494,15 @@ const TitleVerification = () => {
                         <table className="w-full">
                             <thead>
                                 <tr>
-                                    <th className="border-b-2 p-2 text-left">ID</th>
                                     <th className="border-b-2 p-2 text-left">Title</th>
+                                    <th className="border-b-2 p-2 text-left">Frequency</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {Object.entries(soundSimilarTitles).map(([id, title]) => (
-                                    <tr key={id}>
-                                        <td className="border-b p-2">{id}</td>
+                                {Object.entries(soundSimilarTitles).filter(([_, freq]) => freq > 0).map(([title, freq]) => (
+                                    <tr key={title}>
                                         <td className="border-b p-2">{title}</td>
+                                        <td className="border-b p-2">{freq}</td>
                                     </tr>
                                 ))}
                             </tbody>

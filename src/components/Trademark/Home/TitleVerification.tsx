@@ -22,11 +22,11 @@ interface TestCase {
 
 const TitleVerification = () => {
     const [title, setTitle] = useState("");
-    const [report,setReport]= useState("");
+    const [report, setReport] = useState("");
     const [testCases, setTestCases] = useState<TestCase[]>([
         {
             id: 1,
-            title: "Check Min Word", 
+            title: "Check Min Word",
             status: 'idle',
             endpoint: '/check_min_word',
             method: 'POST'
@@ -35,7 +35,7 @@ const TitleVerification = () => {
             id: 2,
             title: "Check Special Character",
             status: 'idle',
-            endpoint: '/check_spec_char', 
+            endpoint: '/check_spec_char',
             method: 'POST'
         },
         {
@@ -47,7 +47,7 @@ const TitleVerification = () => {
         },
         {
             id: 4,
-            title: "Prefix Suffix Check", 
+            title: "Prefix Suffix Check",
             status: 'idle',
             endpoint: '/restricted_check/check',
             method: 'POST'
@@ -76,7 +76,7 @@ const TitleVerification = () => {
         // Set all test cases to running
         setTestCases(prev => prev.map(test => ({ ...test, status: 'running' })));
 
-        
+
 
         const apiCalls = testCases.map(async (test) => {
             try {
@@ -145,7 +145,7 @@ const TitleVerification = () => {
                     </div>
                 )}
                 {test.response.message && (
-                    <div className={`${test.status==="success" ? " text-gray-700" : "text-red-600"} `}>
+                    <div className={`${test.status === "success" ? " text-gray-700" : "text-red-600"} `}>
                         <span className="font-semibold">Message: </span>
                         {test.response.message}
                     </div>
@@ -159,16 +159,16 @@ const TitleVerification = () => {
             </div>
         );
     };
-    
-    const getReportDetails=async (title:string)=>{
-        let response = await fetch(`${backendUrl}/get_report?title=${encodeURIComponent(title)}`, {
+
+    const getReportDetails = async (title: string) => {
+        const response = await fetch(`${backendUrl}/get_report?title=${encodeURIComponent(title)}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
         });
         const data = await response!.json();
-        console.log(data,"__REPORT__",data[0]?.final_output);
+        console.log(data, "__REPORT__", data[0]?.final_output);
         setReport(data[0]?.final_output);
     }
 
@@ -227,12 +227,12 @@ const TitleVerification = () => {
                 <h1 className='text-7xl text-center text-primary-600  my-8 font-bold uppercase'>
                     Report:
                 </h1>
-            <div className=' border-2 border-gray-700 text-lg rounded-lg px-6 my-2 py-2 text-center w-10/12 mx-auto'>
-                <p className=''>
-                    {report}
-                </p>
+                <div className=' border-2 border-gray-700 text-lg rounded-lg px-6 my-2 py-2 text-center w-10/12 mx-auto'>
+                    <p className=''>
+                        {report}
+                    </p>
 
-            </div>
+                </div>
             </>
             }
         </div>

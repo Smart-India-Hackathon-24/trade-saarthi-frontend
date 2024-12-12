@@ -35,7 +35,8 @@ const TitleVerification = () => {
     const [sameTitlesAcceptanceProbability, setSameTitlesAcceptanceProbability] = useState(0);
     const [similarTitlesRejectanceProbability, setSimilarTitlesRejectanceProbability] = useState(0);
     const [similarTitlesAcceptanceProbability, setSimilarTitlesAcceptanceProbability] = useState(0);
-    const [probability, setProbability] = useState(0);
+    const [soundSimilarTitlesRejectanceProbability, setSoundSimilarTitlesRejectanceProbability] = useState(0);
+    const [soundSimilarTitlesAcceptanceProbability, setSoundSimilarTitlesAcceptanceProbability] = useState(0);
     const [sameTitles, setSameTitles] = useState<Record<string, string>>({});
     const [similarTitles, setSimilarTitles] = useState<Record<string, string>>({});
 
@@ -162,6 +163,12 @@ const TitleVerification = () => {
                     if (data["acceptance probability"] && test.id == 8) {
                         setSimilarTitlesAcceptanceProbability(data["acceptance probability"])
                     }
+                    if (data["rejectance probability"] && test.id == 9) {
+                        setSoundSimilarTitlesRejectanceProbability(data["rejectance probability"])
+                    }
+                    if (data["acceptance probability"] && test.id == 9) {
+                        setSoundSimilarTitlesAcceptanceProbability(data["acceptance probability"])
+                    }
                     if (data["FDL"] && test.id == 7) {
                         setSameTitles(data["FDL"]["Title_Name"])
                     }
@@ -170,7 +177,7 @@ const TitleVerification = () => {
                     }
                     return {
                         id: test.id,
-                        status: data.isValid ? 'success' : 'failed',
+                        status: data.isValid ? test.id == 7 ? 'failed' : 'success' : 'failed',
                         response: data
                     };
 
@@ -273,6 +280,37 @@ const TitleVerification = () => {
         });
     };
 
+    const getStatusText = (test: TestCase) => {
+        if (test.status === 'running') {
+            return (
+                <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="uppercase font-semibold text-sm text-primary-600">
+                        Running
+                    </span>
+                </div>
+            );
+        }
+
+        // For Similar and Sound Similar Title Check
+        if (test.id === 8 || test.id === 9) {
+            const rejectPercentage = test.id === 8 ? similarTitlesRejectanceProbability : soundSimilarTitlesRejectanceProbability;
+            const textColor = test.status === 'success' ? 'text-green-800' : 'text-red-800';
+            return (
+                <span className={`px-3 py-1 rounded-full text-sm font-bold border ${getStatusColor(test.status)} ${textColor} `}>
+                    {`${rejectPercentage}%`}
+                </span>
+            );
+        }
+
+        // For all other tests
+        return (
+            <span className={`px-3 py-1 rounded-full text-sm font-bold border ${getStatusColor(test.status)}`}>
+                {test.status === 'success' ? 'PASSED' : 'FAILED'}
+            </span>
+        );
+    };
+
     return (
         <div className="w-full h-[90vh] p-6 overflow-y-auto">
             <div className="flex flex-col h-full md:flex-row">
@@ -351,18 +389,7 @@ const TitleVerification = () => {
                                                 >
                                                     <div className="flex justify-between items-center">
                                                         <span className="text-primary-800 font-semibold">{test.title}</span>
-                                                        {test.status === 'running' ? (
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="w-4 h-4 border-2 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
-                                                                <span className="uppercase font-semibold text-sm text-primary-600">
-                                                                    Running
-                                                                </span>
-                                                            </div>
-                                                        ) : (
-                                                            <span className={`px-3 py-1 rounded-full text-sm font-bold border ${getStatusColor(test.status)}`}>
-                                                                {test.status === 'success' ? test.id == 7 ? sameTitlesRejectanceProbability + "%" : "100%" : test.id == 8 ? similarTitlesRejectanceProbability + "%" : '0%'}
-                                                            </span>
-                                                        )}
+                                                        {getStatusText(test)}
                                                     </div>
                                                     {test.status !== 'idle' && test.status !== 'running' && renderResponseDetails(test)}
                                                 </motion.div>

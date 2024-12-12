@@ -31,6 +31,13 @@ const TitleVerification = () => {
     const [title, setTitle] = useState("");
     const [report, setReport] = useState("");
     const [openSections, setOpenSections] = useState<number[]>([]);
+    const [sameTitlesRejectanceProbability, setSameTitlesRejectanceProbability] = useState(0);
+    const [sameTitlesAcceptanceProbability, setSameTitlesAcceptanceProbability] = useState(0);
+    const [similarTitlesRejectanceProbability, setSimilarTitlesRejectanceProbability] = useState(0);
+    const [similarTitlesAcceptanceProbability, setSimilarTitlesAcceptanceProbability] = useState(0);
+    const [probability, setProbability] = useState(0);
+    const [sameTitles, setSameTitles] = useState<Record<string, string>>({});
+    const [similarTitles, setSimilarTitles] = useState<Record<string, string>>({});
 
     const accordionSections: AccordionSection[] = [
         {
@@ -89,21 +96,21 @@ const TitleVerification = () => {
                     id: 7,
                     title: "Same Title Check",
                     status: 'idle',
-                    endpoint: '/dummy',
+                    endpoint: '/searchresults/sametitle',
                     method: 'GET'
                 },
                 {
                     id: 8,
                     title: "Similar Title Check",
                     status: 'idle',
-                    endpoint: '/dummy',
+                    endpoint: '/searchresults/similartitles',
                     method: 'GET'
                 }
                 , {
                     id: 9,
                     title: "Sound Similar Title Check",
                     status: 'idle',
-                    endpoint: '/dummy',
+                    endpoint: '/searchresults/similarsound',
                     method: 'GET'
                 }
             ]
@@ -125,6 +132,12 @@ const TitleVerification = () => {
         for (const section of sections) {
             const apiCalls = section.testCases.map(async (test) => {
                 try {
+                    setSameTitlesRejectanceProbability(0);
+                    setSameTitlesAcceptanceProbability(0);
+                    setSimilarTitlesRejectanceProbability(0);
+                    setSimilarTitlesAcceptanceProbability(0);
+                    setSameTitles({});
+                    setSimilarTitles({});
                     let response;
                     if (test.method === 'GET') {
                         response = await fetch(`${backendUrl}${test.endpoint}?title=${encodeURIComponent(title)}`);
@@ -136,12 +149,32 @@ const TitleVerification = () => {
                             },
                         });
                     }
-                    const data: ApiResponse = await response!.json();
+                    const data: any = await response!.json();
+                    if (data["rejectance probability"] && test.id == 7) {
+                        setSameTitlesRejectanceProbability(data["rejectance probability"])
+                    }
+                    if (data["acceptance probability"] && test.id == 7) {
+                        setSameTitlesAcceptanceProbability(data["acceptance probability"])
+                    }
+                    if (data["rejectance probability"] && test.id == 8) {
+                        setSimilarTitlesRejectanceProbability(data["rejectance probability"])
+                    }
+                    if (data["acceptance probability"] && test.id == 8) {
+                        setSimilarTitlesAcceptanceProbability(data["acceptance probability"])
+                    }
+                    if (data["FDL"] && test.id == 7) {
+                        setSameTitles(data["FDL"]["Title_Name"])
+                    }
+                    if (data["FDL"] && test.id == 8) {
+                        setSimilarTitles(data["FDL"]["Title_Name"])
+                    }
                     return {
                         id: test.id,
                         status: data.isValid ? 'success' : 'failed',
                         response: data
                     };
+
+
                 } catch (_error) {
                     return {
                         id: test.id,
@@ -227,7 +260,7 @@ const TitleVerification = () => {
             },
         });
         const data = await response!.json();
-        setReport(data[0]?.final_output);
+        setReport(data?.final_output);
     }
 
     const toggleSection = (sectionId: number) => {
@@ -241,10 +274,10 @@ const TitleVerification = () => {
     };
 
     return (
-        <div className="w-full h-[90vh] p-6">
+        <div className="w-full h-[90vh] p-6 overflow-y-auto">
             <div className="flex flex-col h-full md:flex-row">
                 {/* Left Section - Input */}
-                <div className="md:w-1/2 flex flex-1 p-4 flex-col justify-center items-center overflow-y-auto">
+                <div className="md:w-1/2 flex flex-1 p-4 flex-col justify-between items-center overflow-y-auto">
                     <div className="bg-white p-6 w-[80%] rounded-lg shadow-lg border border-primary-100">
                         <h2 className="text-2xl font-bold mb-6 text-primary-700">Title Verification</h2>
                         <div className="space-y-4">
@@ -261,6 +294,20 @@ const TitleVerification = () => {
                             >
                                 Verify Title
                             </button>
+                        </div>
+                    </div>
+                    <div className="flex flex-col items-center justify-center">
+                        <div className="text-lg font-semibold text-primary-600">
+                            Same Title Rejectance Probability: {(sameTitlesRejectanceProbability || 0).toFixed(2)}%
+                        </div>
+                        <div className="text-lg font-semibold text-primary-600">
+                            Same Title Acceptance Probability: {(sameTitlesAcceptanceProbability || 0).toFixed(2)}%
+                        </div>
+                        <div className="text-lg font-semibold text-primary-600">
+                            Similarity Acceptance Probability: {(similarTitlesAcceptanceProbability || 0).toFixed(2)}%
+                        </div>
+                        <div className="text-lg font-semibold text-primary-600">
+                            Similarity Rejectance Probability: {(similarTitlesRejectanceProbability || 0).toFixed(2)}%
                         </div>
                     </div>
                 </div>
@@ -313,7 +360,7 @@ const TitleVerification = () => {
                                                             </div>
                                                         ) : (
                                                             <span className={`px-3 py-1 rounded-full text-sm font-bold border ${getStatusColor(test.status)}`}>
-                                                                {test.status === 'success' ? '100%' : '0%'}
+                                                                {test.status === 'success' ? test.id == 7 ? sameTitlesRejectanceProbability + "%" : "100%" : test.id == 8 ? similarTitlesRejectanceProbability + "%" : '0%'}
                                                             </span>
                                                         )}
                                                     </div>
@@ -325,6 +372,54 @@ const TitleVerification = () => {
                                 </AnimatePresence>
                             </motion.div>
                         ))}
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex flex-col md:flex-row gap-8 p-4">
+                {/* FLD Table */}
+                <div className="flex-1">
+                    <h2 className="text-2xl font-bold mb-4 text-primary-700">Same Titles</h2>
+                    <div className="bg-white rounded-lg shadow-md p-4 max-h-[40vh] h-[40vh] overflow-y-auto">
+                        <table className="w-full">
+                            <thead>
+                                <tr>
+                                    <th className="border-b-2 p-2 text-left">ID</th>
+                                    <th className="border-b-2 p-2 text-left">Title</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {Object.entries(sameTitles).map(([id, title]) => (
+                                    <tr key={id}>
+                                        <td className="border-b p-2">{id}</td>
+                                        <td className="border-b p-2">{title}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {/* DFL Table */}
+                <div className="flex-1">
+                    <h2 className="text-2xl font-bold mb-4 text-primary-700">Similar Titles</h2>
+                    <div className="bg-white rounded-lg shadow-md p-4 max-h-[40vh] h-[40vh] overflow-y-auto">
+                        <table className="w-full">
+                            <thead>
+                                <tr>
+                                    <th className="border-b-2 p-2 text-left">ID</th>
+                                    <th className="border-b-2 p-2 text-left">Title</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {Object.entries(similarTitles).map(([id, title]) => (
+                                    <tr key={id}>
+                                        <td className="border-b p-2">{id}</td>
+                                        <td className="border-b p-2">{title}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

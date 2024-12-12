@@ -140,6 +140,7 @@ const TitleVerification = () => {
                     setSimilarTitlesAcceptanceProbability(null);
                     setSameTitles({});
                     setSimilarTitles({});
+                    setSoundSimilarTitles({});
                     let response;
                     if (test.method === 'GET') {
                         response = await fetch(`${backendUrl}${test.endpoint}?title=${encodeURIComponent(title)}`);

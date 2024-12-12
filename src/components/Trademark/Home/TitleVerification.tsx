@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { getBackendUrl } from '@/utils/getBackendUrl';
 import { motion, AnimatePresence } from 'framer-motion';
-import { text } from 'stream/consumers';
 
 interface ApiResponse {
     status: string;
@@ -32,12 +31,12 @@ const TitleVerification = () => {
     const [title, setTitle] = useState("");
     const [report, setReport] = useState("");
     const [openSections, setOpenSections] = useState<number[]>([]);
-    const [sameTitlesRejectanceProbability, setSameTitlesRejectanceProbability] = useState(0);
-    const [sameTitlesAcceptanceProbability, setSameTitlesAcceptanceProbability] = useState(0);
-    const [similarTitlesRejectanceProbability, setSimilarTitlesRejectanceProbability] = useState(0);
-    const [similarTitlesAcceptanceProbability, setSimilarTitlesAcceptanceProbability] = useState(0);
-    const [soundSimilarTitlesRejectanceProbability, setSoundSimilarTitlesRejectanceProbability] = useState(0);
-    const [soundSimilarTitlesAcceptanceProbability, setSoundSimilarTitlesAcceptanceProbability] = useState(0);
+    const [sameTitlesRejectanceProbability, setSameTitlesRejectanceProbability] = useState<number | null>(null);
+    const [sameTitlesAcceptanceProbability, setSameTitlesAcceptanceProbability] = useState<number | null>(null);
+    const [similarTitlesRejectanceProbability, setSimilarTitlesRejectanceProbability] = useState<number | null>(null);
+    const [similarTitlesAcceptanceProbability, setSimilarTitlesAcceptanceProbability] = useState<number | null>(null);
+    const [soundSimilarTitlesRejectanceProbability, setSoundSimilarTitlesRejectanceProbability] = useState<number | null>(null);
+    const [soundSimilarTitlesAcceptanceProbability, setSoundSimilarTitlesAcceptanceProbability] = useState<number | null>(null);
     const [sameTitles, setSameTitles] = useState<Record<string, string>>({});
     const [similarTitles, setSimilarTitles] = useState<Record<string, string>>({});
     const [soundSimilarTitles, setSoundSimilarTitles] = useState<Record<string, string>>({});
@@ -135,10 +134,10 @@ const TitleVerification = () => {
         for (const section of sections) {
             const apiCalls = section.testCases.map(async (test) => {
                 try {
-                    setSameTitlesRejectanceProbability(0);
-                    setSameTitlesAcceptanceProbability(0);
-                    setSimilarTitlesRejectanceProbability(0);
-                    setSimilarTitlesAcceptanceProbability(0);
+                    setSameTitlesRejectanceProbability(null);
+                    setSameTitlesAcceptanceProbability(null);
+                    setSimilarTitlesRejectanceProbability(null);
+                    setSimilarTitlesAcceptanceProbability(null);
                     setSameTitles({});
                     setSimilarTitles({});
                     let response;
@@ -300,6 +299,13 @@ const TitleVerification = () => {
         }
 
         if (test.id === 7) {
+            if (sameTitlesRejectanceProbability === null || sameTitlesAcceptanceProbability === null) {
+                return (
+                    <span className="px-3 py-1 rounded-full text-sm font-bold border text-gray-800 border-gray-800 bg-gray-100">
+                        Pending
+                    </span>
+                );
+            }
             const d = sameTitlesRejectanceProbability > sameTitlesAcceptanceProbability ? "Failed" : "Passed"
             return (
                 <span className={`px-3 py-1 rounded-full text-sm font-bold border ${d === "Failed" ? "text-red-800 border-red-800 bg-red-100" : "text-green-800 border-green-800 bg-green-100"}`}>
@@ -311,6 +317,13 @@ const TitleVerification = () => {
         // For Similar and Sound Similar Title Check
         if (test.id === 8 || test.id === 9) {
             const rejectPercentage = test.id === 8 ? similarTitlesRejectanceProbability : soundSimilarTitlesRejectanceProbability;
+            if (rejectPercentage === null) {
+                return (
+                    <span className="px-3 py-1 rounded-full text-sm font-bold border text-gray-800 border-gray-800 bg-gray-100">
+                        Pending
+                    </span>
+                );
+            }
             const textColor = test.status === 'success' ? 'text-green-800' : 'text-red-800';
             return (
                 <span className={`px-3 py-1 rounded-full text-sm font-bold border ${getStatusColor(test.status)} ${textColor} `}>

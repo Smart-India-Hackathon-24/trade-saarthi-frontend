@@ -299,31 +299,43 @@ const TitleVerification = () => {
         }
 
         if (test.id === 7) {
-            // 
-            const d = sameTitlesRejectanceProbability && sameTitlesAcceptanceProbability ? (sameTitlesRejectanceProbability > sameTitlesAcceptanceProbability ? "Failed" : "Passed") : "Pending"
-            return (
-                <span className={`px-3 py-1 rounded-full text-sm font-bold border ${d === "Failed" ? "text-red-800 border-red-800 bg-red-100" : "text-green-800 border-green-800 bg-green-100"}`}>
-                    {d}
-                </span>
-            );
-        }
-
-        // For Similar and Sound Similar Title Check
-        if (test.id === 8 || test.id === 9) {
-            const rejectPercentage = test.id === 8 ? similarTitlesRejectanceProbability : soundSimilarTitlesRejectanceProbability;
-            if (rejectPercentage === null) {
+            if (test.status === 'idle') {
                 return (
                     <span className="px-3 py-1 rounded-full text-sm font-bold border text-gray-800 border-gray-800 bg-gray-100">
                         Pending
                     </span>
                 );
             }
-            const textColor = test.status === 'success' ? 'text-green-800' : 'text-red-800';
-            return (
-                <span className={`px-3 py-1 rounded-full text-sm font-bold border ${getStatusColor(test.status)} ${textColor} `}>
-                    {`${rejectPercentage.toFixed(2)}% `} Similarity
-                </span>
-            );
+            
+            if (sameTitlesRejectanceProbability !== null && sameTitlesAcceptanceProbability !== null) {
+                const result = sameTitlesRejectanceProbability > sameTitlesAcceptanceProbability ? "Failed" : "Passed";
+                return (
+                    <span className={`px-3 py-1 rounded-full text-sm font-bold border ${result === "Failed" ? "text-red-800 border-red-800 bg-red-100" : "text-green-800 border-green-800 bg-green-100"}`}>
+                        {result}
+                    </span>
+                );
+            }
+        }
+
+        // For Similar and Sound Similar Title Check
+        if (test.id === 8 || test.id === 9) {
+            if (test.status === 'idle') {
+                return (
+                    <span className="px-3 py-1 rounded-full text-sm font-bold border text-gray-800 border-gray-800 bg-gray-100">
+                        Pending
+                    </span>
+                );
+            }
+
+            const rejectPercentage = test.id === 8 ? similarTitlesRejectanceProbability : soundSimilarTitlesRejectanceProbability;
+            if (rejectPercentage !== null) {
+                const textColor = test.status === 'success' ? 'text-green-800' : 'text-red-800';
+                return (
+                    <span className={`px-3 py-1 rounded-full text-sm font-bold border ${getStatusColor(test.status)} ${textColor}`}>
+                        {`${rejectPercentage.toFixed(2)}% `} Similarity
+                    </span>
+                );
+            }
         }
 
         // For all other tests

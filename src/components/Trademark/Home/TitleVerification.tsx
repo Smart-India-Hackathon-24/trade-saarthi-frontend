@@ -30,7 +30,7 @@ interface AccordionSection {
 const TitleVerification = () => {
     const [title, setTitle] = useState("");
     const [report, setReport] = useState("");
-    const [openSection, setOpenSection] = useState<number | null>(null);
+    const [openSections, setOpenSections] = useState<number[]>([]);
 
     const accordionSections: AccordionSection[] = [
         {
@@ -230,6 +230,16 @@ const TitleVerification = () => {
         setReport(data[0]?.final_output);
     }
 
+    const toggleSection = (sectionId: number) => {
+        setOpenSections(prev => {
+            if (prev.includes(sectionId)) {
+                return prev.filter(id => id !== sectionId);
+            } else {
+                return [...prev, sectionId];
+            }
+        });
+    };
+
     return (
         <div className="w-full h-[90vh] p-6">
             <div className="flex flex-col h-full md:flex-row">
@@ -262,21 +272,21 @@ const TitleVerification = () => {
                             <motion.div
                                 key={section.id}
                                 className={`rounded-lg shadow-md overflow-hidden
-                                    ${openSection === section.id ? 'bg-primary-100' : 'bg-white'}`}
+                                    ${openSections.includes(section.id) ? 'bg-primary-100' : 'bg-white'}`}
                                 layout
                             >
                                 <button
                                     className="w-full p-4 text-left font-semibold text-primary-800 flex justify-between items-center"
-                                    onClick={() => setOpenSection(openSection === section.id ? null : section.id)}
+                                    onClick={() => toggleSection(section.id)}
                                 >
                                     {section.title}
                                     <span className="text-xl font-bold">
-                                        {openSection === section.id ? '-' : '+'}
+                                        {openSections.includes(section.id) ? '-' : '+'}
                                     </span>
                                 </button>
 
                                 <AnimatePresence mode="wait">
-                                    {openSection === section.id && (
+                                    {openSections.includes(section.id) && (
                                         <motion.div
                                             initial={{ height: 0, opacity: 0 }}
                                             animate={{ height: "auto", opacity: 1 }}

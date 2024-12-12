@@ -10,6 +10,8 @@ export default function Navbar() {
         { href: '/title-verify', label: 'Title Verify' },
         { href: '/title-registration', label: 'Title Registration' },
         { href: '/title-comparison', label: 'Title Comparison' },
+        { href: '/title-search', label: 'Title Search' },
+        { href: '/cms', label: 'CMS' },
     ];
 
     return (
@@ -30,11 +32,10 @@ export default function Navbar() {
                                 <Link
                                     key={link.href}
                                     href={link.href}
-                                    className={`px-3 py-2 rounded-md ${
-                                        pathname === link.href
+                                    className={`px-3 py-2 rounded-md ${pathname === link.href
                                             ? 'bg-accent-500 text-white'
                                             : 'text-gray-600 hover:text-accent-500 hover:bg-primary-100'
-                                    } transition-colors duration-200`}
+                                        } transition-colors duration-200`}
                                 >
                                     {link.label}
                                 </Link>

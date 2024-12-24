@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { getBackendUrl } from '@/utils/getBackendUrl';
 import { motion, AnimatePresence } from 'framer-motion';
+import { GiConsoleController } from 'react-icons/gi';
 
 interface ApiResponse {
     status: string;
@@ -155,22 +156,26 @@ const TitleVerification = () => {
                         });
                     }
                     const data: any = await response!.json();
-                    if (data["rejectance probability"] && test.id == 7) {
+                    if(test.id==7){
+                        console.log("___________",data,data["acceptance probability"])
+                    }
+                    if (data["rejectance probability"]>=0 && test.id == 7) {
                         setSameTitlesRejectanceProbability(data["rejectance probability"])
                     }
-                    if (data["acceptance probability"] && test.id == 7) {
+                    if (data["acceptance probability"]>=0 && test.id == 7) {
+                        console.log("DDDDDDDDDDDDDDDDDDDDDDDdd",data);
                         setSameTitlesAcceptanceProbability(data["acceptance probability"])
                     }
-                    if (data["rejectance probability"] && test.id == 8) {
+                    if (data["rejectance probability"]>=0 && test.id == 8) {
                         setSimilarTitlesRejectanceProbability(data["rejectance probability"])
                     }
-                    if (data["acceptance probability"] && test.id == 8) {
+                    if (data["acceptance probability"]>=0 && test.id == 8) {
                         setSimilarTitlesAcceptanceProbability(data["acceptance probability"])
                     }
-                    if (data["rejectance probability"] && test.id == 9) {
+                    if (data["rejectance probability"]>=0 && test.id == 9) {
                         setSoundSimilarTitlesRejectanceProbability(data["rejectance probability"])
                     }
-                    if (data["acceptance probability"] && test.id == 9) {
+                    if (data["acceptance probability"]>=0 && test.id == 9) {
                         setSoundSimilarTitlesAcceptanceProbability(data["acceptance probability"])
                     }
                     if (data["FDL"] && test.id == 7) {
@@ -325,6 +330,7 @@ const TitleVerification = () => {
                 );
             }
 
+            console.log(sameTitlesAcceptanceProbability,sameTitlesRejectanceProbability,'-----------------------')
             if (sameTitlesRejectanceProbability !== null && sameTitlesAcceptanceProbability !== null) {
                 const result = sameTitlesRejectanceProbability > sameTitlesAcceptanceProbability ? "Failed" : "Passed";
                 return (

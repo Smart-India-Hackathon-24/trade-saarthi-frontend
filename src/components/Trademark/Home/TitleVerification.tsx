@@ -326,7 +326,6 @@ const TitleVerification = () => {
                 );
             }
 
-            console.log(sameTitlesAcceptanceProbability,sameTitlesRejectanceProbability,'-----------------------')
             if (sameTitlesRejectanceProbability !== null && sameTitlesAcceptanceProbability !== null) {
                 const result = sameTitlesRejectanceProbability > sameTitlesAcceptanceProbability ? "Failed" : "Passed";
                 return (

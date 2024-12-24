@@ -156,14 +156,10 @@ const TitleVerification = () => {
                         });
                     }
                     const data: any = await response!.json();
-                    if(test.id==7){
-                        console.log("___________",data,data["acceptance probability"])
-                    }
                     if (data["rejectance probability"]>=0 && test.id == 7) {
                         setSameTitlesRejectanceProbability(data["rejectance probability"])
                     }
                     if (data["acceptance probability"]>=0 && test.id == 7) {
-                        console.log("DDDDDDDDDDDDDDDDDDDDDDDdd",data);
                         setSameTitlesAcceptanceProbability(data["acceptance probability"])
                     }
                     if (data["rejectance probability"]>=0 && test.id == 8) {
@@ -330,7 +326,6 @@ const TitleVerification = () => {
                 );
             }
 
-            console.log(sameTitlesAcceptanceProbability,sameTitlesRejectanceProbability,'-----------------------')
             if (sameTitlesRejectanceProbability !== null && sameTitlesAcceptanceProbability !== null) {
                 const result = sameTitlesRejectanceProbability > sameTitlesAcceptanceProbability ? "Failed" : "Passed";
                 return (

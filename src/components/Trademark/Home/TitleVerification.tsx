@@ -138,6 +138,8 @@ const TitleVerification = () => {
                     setSameTitlesAcceptanceProbability(null);
                     setSimilarTitlesRejectanceProbability(null);
                     setSimilarTitlesAcceptanceProbability(null);
+                    setSoundSimilarTitlesAcceptanceProbability(null);
+                    setSoundSimilarTitlesRejectanceProbability(null);
                     setSameTitles({});
                     setSimilarTitles({});
                     setSoundSimilarTitles({});
@@ -263,7 +265,7 @@ const TitleVerification = () => {
                         {test.response.invalid_words.join(', ')}
                     </div>
                 )}
-                {test.response.message && (
+                {![7, 8, 9].includes(test.id) && test.response.message && (
                     <div className={`${test.status === "success" ? "text-gray-700" : "text-red-600"}`}>
                         <span className="font-semibold">Message: </span>
                         {test.response.message}
@@ -301,7 +303,7 @@ const TitleVerification = () => {
     };
 
     const getStatusText = (test: TestCase) => {
-        console.log("test: ", test);
+        // console.log("test: ", test);
 
         if (test.status === 'running') {
             return (
@@ -345,7 +347,7 @@ const TitleVerification = () => {
 
             const rejectPercentage = test.id === 8 ? similarTitlesRejectanceProbability : soundSimilarTitlesRejectanceProbability;
             if (rejectPercentage !== null) {
-                const textColor = test.status === 'success' ? 'text-green-800' : 'text-red-800';
+                const textColor = rejectPercentage < 60 ? 'text-green-800' : 'text-red-800 bg-red-100 border-red-500';
                 return (
                     <span className={`px-3 py-1 rounded-full text-sm font-bold border ${getStatusColor(test.status)} ${textColor}`}>
                         {`${rejectPercentage.toFixed(2)}% `} Similarity
